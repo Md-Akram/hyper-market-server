@@ -32,10 +32,25 @@ async function run() {
         const jobsCollection = database.collection("jobs");
         const bidsCollection = database.collection("bids");
 
+        app.post('/jobs', async (req, res) => {
+            const job = req.body
+            const result = await jobsCollection.insertOne(job)
+            res.send(result)
+        })
+
         app.get('/jobs/:category', async (req, res) => {
             const category = req.params.category
             console.log(category);
             const query = { category: `${category}` }
+            const cursor = jobsCollection.find(query)
+            const askedJobs = await cursor.toArray()
+            res.send(askedJobs)
+        })
+
+        app.get('/jobs/mypostedjobs/:email', async (req, res) => {
+            const email = req.params.email
+            console.log(email);
+            const query = { sellerEmail: `${email}` }
             const cursor = jobsCollection.find(query)
             const askedJobs = await cursor.toArray()
             res.send(askedJobs)
@@ -51,6 +66,34 @@ async function run() {
         app.post('/bids', async (req, res) => {
             const bid = req.body
             const result = await bidsCollection.insertOne(bid)
+            res.send(result)
+        })
+
+        app.put('/jobs/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id);
+            const updatedJob = req.body
+            const filter = { _id: new ObjectId(`${id}`) }
+            const options = { upsert: true }
+            const updateJob = {
+                $set: {
+                    ...updatedJob
+                    // name: updatedProduct.name,
+                    // brandName: updatedProduct.brandName,
+                    // imgURL: updatedProduct.imgURL,
+                    // type: updatedProduct.type,
+                    // price: updatedProduct.price,
+                    // ratings: updatedProduct.ratings
+                }
+            }
+            const result = await jobsCollection.updateOne(filter, updateJob, options)
+            res.send(result)
+        })
+
+        app.delete('/deletejob/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(`${id}`) }
+            const result = await jobsCollection.deleteOne(query)
             res.send(result)
         })
 

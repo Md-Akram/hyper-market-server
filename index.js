@@ -30,6 +30,7 @@ async function run() {
 
         const database = client.db("marketDB");
         const jobsCollection = database.collection("jobs");
+        const bidsCollection = database.collection("bids");
 
         app.get('/jobs/:category', async (req, res) => {
             const category = req.params.category
@@ -45,6 +46,12 @@ async function run() {
             const query = { _id: new ObjectId(`${id}`) }
             const askedJob = await jobsCollection.findOne(query)
             res.send(askedJob)
+        })
+
+        app.post('/bids', async (req, res) => {
+            const bid = req.body
+            const result = await bidsCollection.insertOne(bid)
+            res.send(result)
         })
 
     } finally {

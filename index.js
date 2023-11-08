@@ -56,6 +56,16 @@ async function run() {
             res.send(askedJobs)
         })
 
+        app.get('/bids/mybids/:email', async (req, res) => {
+            const email = req.params.email
+            const query = {
+                bidderEmail: `${email}`
+            }
+            const cursor = bidsCollection.find(query)
+            const data = await cursor.toArray()
+            res.send(data)
+        })
+
         app.get('/job/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(`${id}`) }
@@ -78,12 +88,6 @@ async function run() {
             const updateJob = {
                 $set: {
                     ...updatedJob
-                    // name: updatedProduct.name,
-                    // brandName: updatedProduct.brandName,
-                    // imgURL: updatedProduct.imgURL,
-                    // type: updatedProduct.type,
-                    // price: updatedProduct.price,
-                    // ratings: updatedProduct.ratings
                 }
             }
             const result = await jobsCollection.updateOne(filter, updateJob, options)

@@ -40,7 +40,12 @@ async function run() {
             res.send(askedJobs)
         })
 
-
+        app.get('/job/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(`${id}`) }
+            const askedJob = await jobsCollection.findOne(query)
+            res.send(askedJob)
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error

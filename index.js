@@ -10,7 +10,7 @@ require('dotenv').config()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5173/myPostedJobs'],
+    origin: ['http://localhost:5173', "https://hyper-market-67575.web.app", "https://hyper-market-67575.firebaseapp.com"],
     credentials: true
 }))
 

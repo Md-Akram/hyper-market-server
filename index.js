@@ -40,7 +40,6 @@ async function run() {
 
         app.get('/jobs/:category', async (req, res) => {
             const category = req.params.category
-            console.log(category);
             const query = { category: `${category}` }
             const cursor = jobsCollection.find(query)
             const askedJobs = await cursor.toArray()
@@ -49,7 +48,6 @@ async function run() {
 
         app.get('/jobs/mypostedjobs/:email', async (req, res) => {
             const email = req.params.email
-            console.log(email);
             const query = { sellerEmail: `${email}` }
             const cursor = jobsCollection.find(query)
             const askedJobs = await cursor.toArray()
@@ -60,6 +58,16 @@ async function run() {
             const email = req.params.email
             const query = {
                 bidderEmail: `${email}`
+            }
+            const cursor = bidsCollection.find(query)
+            const data = await cursor.toArray()
+            res.send(data)
+        })
+
+        app.get('/bids/bidrequests/:email', async (req, res) => {
+            const email = req.params.email
+            const query = {
+                sellerEmail: `${email}`
             }
             const cursor = bidsCollection.find(query)
             const data = await cursor.toArray()
@@ -81,7 +89,6 @@ async function run() {
 
         app.put('/jobs/:id', async (req, res) => {
             const id = req.params.id
-            console.log(id);
             const updatedJob = req.body
             const filter = { _id: new ObjectId(`${id}`) }
             const options = { upsert: true }
@@ -91,6 +98,22 @@ async function run() {
                 }
             }
             const result = await jobsCollection.updateOne(filter, updateJob, options)
+            res.send(result)
+        })
+
+        app.put('/bids/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id)
+            const updatedBid = req.body
+            console.log(updatedBid)
+            const filter = { _id: new ObjectId(`${id}`) }
+            const options = { upsert: true }
+            const updateBid = {
+                $set: {
+                    ...updatedBid
+                }
+            }
+            const result = await bidsCollection.updateOne(filter, updateBid, options)
             res.send(result)
         })
 

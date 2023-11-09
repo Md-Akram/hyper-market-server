@@ -1,11 +1,35 @@
 const express = require('express');
 const cors = require('cors')
 const app = express();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 
-app.use(cors())
+
 app.use(express.json())
+app.use(cookieParser())
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5173/myPostedJobs'],
+    credentials: true
+}))
+
+const verify = (req, res, next) => {
+    const token = req.cookies?.token
+    console.log("i am from very", req.cookies)
+    if (!token) {
+        return res.status(401).send({ status: 'Unauthorized Access', code: '401' })
+    }
+    jwt.verify(token, process.env.SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ status: 'Unauthorized Access', code: '401' })
+        }
+        console.log(decoded);
+        req.user = decoded
+        next()
+    })
+
+}
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -38,6 +62,22 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/jwt', async (req, res) => {
+            const body = req.body
+            console.log(body);
+            const token = jwt.sign(body, process.env.SECRET, { expiresIn: '10h' })
+            const expirationDate = new Date()
+            expirationDate.setDate(expirationDate.getDate() + 7)
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+                expires: expirationDate
+            })
+            console.log(token);
+            res.send({ body, token })
+        })
+
         app.get('/jobs/:category', async (req, res) => {
             const category = req.params.category
             const query = { category: `${category}` }
@@ -46,7 +86,7 @@ async function run() {
             res.send(askedJobs)
         })
 
-        app.get('/jobs/mypostedjobs/:email', async (req, res) => {
+        app.get('/jobs/mypostedjobs/:email', verify, async (req, res) => {
             const email = req.params.email
             const query = { sellerEmail: `${email}` }
             const cursor = jobsCollection.find(query)
@@ -54,17 +94,17 @@ async function run() {
             res.send(askedJobs)
         })
 
-        app.get('/bids/mybids/:email', async (req, res) => {
+        app.get('/bids/mybids/:email', verify, async (req, res) => {
             const email = req.params.email
             const query = {
                 bidderEmail: `${email}`
             }
             const cursor = bidsCollection.find(query)
-            const data = await cursor.toArray()
+            const data = await cursor.sort({ status: 1 }).toArray()
             res.send(data)
         })
 
-        app.get('/bids/bidrequests/:email', async (req, res) => {
+        app.get('/bids/bidrequests/:email', verify, async (req, res) => {
             const email = req.params.email
             const query = {
                 sellerEmail: `${email}`
@@ -74,7 +114,7 @@ async function run() {
             res.send(data)
         })
 
-        app.get('/job/:id', async (req, res) => {
+        app.get('/job/:id', verify, async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(`${id}`) }
             const askedJob = await jobsCollection.findOne(query)

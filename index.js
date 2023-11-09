@@ -103,9 +103,7 @@ async function run() {
 
         app.put('/bids/:id', async (req, res) => {
             const id = req.params.id
-            console.log(id)
             const updatedBid = req.body
-            console.log(updatedBid)
             const filter = { _id: new ObjectId(`${id}`) }
             const options = { upsert: true }
             const updateBid = {
